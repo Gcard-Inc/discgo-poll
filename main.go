@@ -36,7 +36,7 @@ func init() {
 
 func init() {
 	dg.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if h, ok := command.CommandHandlers[i.ApplicationCommandData().Name]; ok {
+		if h, ok := commands.CommandHandlers[i.ApplicationCommandData().Name]; ok {
 			h(s, i)
 		}
 	})
@@ -44,7 +44,7 @@ func init() {
 
 func main() {
 
-	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
+	dg.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Bot is up!")
 	})
 
@@ -55,7 +55,7 @@ func main() {
 	//dg.Identify.Intents = discordgo.IntentsGuildMessages
 
 	// Open a websocket connection to Discord and begin listening.
-	err = dg.Open()
+	err := dg.Open()
 	if err != nil {
 		fmt.Println("error opening connection,", err)
 		return
@@ -64,7 +64,7 @@ func main() {
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	for _, v := range commands.Commands {
-		_, err := s.ApplicationCommandCreate(s.State.User.ID, *GuildID, v)
+		_, err := dg.ApplicationCommandCreate(dg.State.User.ID, *GuildID, v)
 		if err != nil {
 			log.Panicf("Cannot create '%v' command: %v", v.Name, err)
 		}
