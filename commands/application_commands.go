@@ -47,19 +47,19 @@ var (
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "answer-3",
+					Name:        "answer3",
 					Description: "third answer",
 					Required:    false,
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "answer-4",
+					Name:        "answer4",
 					Description: "fourth answer",
 					Required:    false,
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "answer-5",
+					Name:        "answer5",
 					Description: "fifth answer",
 					Required:    false,
 				},
@@ -89,32 +89,32 @@ var (
 
 	CommandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		CmdPoll: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			margs := []interface{}{}
-			msgformat := "New poll: \n"
-			if len(i.ApplicationCommandData().Options) >= 3 {
-				for j, opt := range i.ApplicationCommandData().Options {
-					if opt.Name == "question" {
-						msgformat += "question: %s \n"
-						margs = append(margs, opt.StringValue())
-					} else if opt.Name == "multipleOptions" {
-						msgformat += "> multipleOptions: %v\n"
-						margs = append(margs, opt.BoolValue())
-					} else {
-						msgformat += fmt.Sprintf("answer %d", j)
-						msgformat += ": %v\n"
-						margs = append(margs, opt.StringValue())
-					}
-				}
-				margs = append(margs, i.ApplicationCommandData().Options[0].StringValue())
-				msgformat += "> poll-id: <#%s>\n"
-			}
+			// margs := []interface{}{}
+			// msgformat := "New poll: \n"
+			// if len(i.ApplicationCommandData().Options) >= 3 {
+			// 	for j, opt := range i.ApplicationCommandData().Options {
+			// 		if opt.Name == "question" {
+			// 			msgformat += "question: %s \n"
+			// 			margs = append(margs, opt.StringValue())
+			// 		} else if opt.Name == "multipleOptions" {
+			// 			msgformat += "> multipleOptions: %v\n"
+			// 			margs = append(margs, opt.BoolValue())
+			// 		} else {
+			// 			msgformat += fmt.Sprintf("answer %d", j)
+			// 			msgformat += ": %v\n"
+			// 			margs = append(margs, opt.StringValue())
+			// 		}
+			// 	}
+			// 	margs = append(margs, i.ApplicationCommandData().Options[0].StringValue())
+			// 	msgformat += "> poll-id: <#%s>\n"
+			// }
+			msgEmbed := formEmbeddedArray(i.ApplicationCommandData())
+
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: fmt.Sprintf(
-						msgformat,
-						margs...,
-					),
+					Content: "test",
+					Embeds:  []*discordgo.MessageEmbed{msgEmbed},
 				},
 			})
 		},
@@ -168,3 +168,37 @@ var (
 		},
 	}
 )
+
+func formEmbeddedArray(data discordgo.ApplicationCommandInteractionData) *discordgo.MessageEmbed {
+	qEmbed := &discordgo.MessageEmbed{
+		Type:  discordgo.EmbedTypeRich,
+		Title: "Question",
+	}
+	messageFields := []*discordgo.MessageEmbedField{}
+	if len(data.Options) >= 3 {
+		for _, opt := range data.Options {
+			if opt.Name == "question" {
+				qEmbed.Description = opt.StringValue()
+
+			} else if opt.Name == "multipleOptions" {
+				field := &discordgo.MessageEmbedField{}
+				if opt.BoolValue() {
+					field.Name = "Allows multiple options"
+				} else {
+					field.Name = "Multiple options not allowed"
+				}
+				messageFields = append(messageFields, field)
+			} else {
+
+				field := &discordgo.MessageEmbedField{
+					Name:   opt.Name,
+					Value:  opt.StringValue(),
+					Inline: true,
+				}
+				messageFields = append(messageFields, field)
+			}
+		}
+	}
+	qEmbed.Fields = messageFields
+	return qEmbed
+}
