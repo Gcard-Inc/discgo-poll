@@ -6,10 +6,19 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const (
+	CmdPoll      = "poll"
+	CmdPolList   = "pollist"
+	CmdPollHelp  = "pollhelp"
+	CmdClosePoll = "closepoll"
+)
+
+var commandList = []string{CmdPoll, CmdPolList, CmdPollHelp, CmdClosePoll}
+
 var (
 	Commands = []*discordgo.ApplicationCommand{
 		{
-			Name:        "poll",
+			Name:        CmdPoll,
 			Description: "basic command route for starting a poll",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -57,15 +66,15 @@ var (
 			},
 		},
 		{
-			Name:        "pollist",
+			Name:        CmdPolList,
 			Description: "List all open polls",
 		},
 		{
-			Name:        "pollhelp",
+			Name:        CmdPollHelp,
 			Description: "get help on all commands",
 		},
 		{
-			Name:        "closepoll",
+			Name:        CmdClosePoll,
 			Description: "Close a poll by id",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -79,9 +88,9 @@ var (
 	}
 
 	CommandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"poll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		CmdPoll: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			margs := []interface{}{}
-			msgformat := ` New poll: \n`
+			msgformat := "New poll: \n"
 			if len(i.ApplicationCommandData().Options) >= 3 {
 				for j, opt := range i.ApplicationCommandData().Options {
 					if opt.Name == "question" {
@@ -109,23 +118,28 @@ var (
 				},
 			})
 		},
-		"pollist": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		CmdPolList: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: "List all polls slash command",
+					Content: "List of all open polls",
 				},
 			})
 		},
-		"pollhelp": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		CmdPollHelp: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			msgFormat := "All available commands: \n"
+			cmdFormat := "/%s \n"
+			for _, c := range commandList {
+				msgFormat += fmt.Sprintf(cmdFormat, c)
+			}
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: "List all commands and how to use them",
+					Content: msgFormat,
 				},
 			})
 		},
-		"closepoll": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		CmdClosePoll: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			margs := []interface{}{
 				// Here we need to convert raw interface{} value to wanted type.
 				// Also, as you can see, here is used utility functions to convert the value
