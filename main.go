@@ -34,19 +34,28 @@ func init() {
 	}
 }
 
-func init() {
-	dg.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if h, ok := commands.CommandHandlers[i.ApplicationCommandData().Name]; ok {
-			h(s, i)
-		}
-	})
-}
-
 func main() {
 
 	dg.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Bot is up!")
 	})
+
+	// Components are part of interactions, so we register InteractionCreate handler
+	dg.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		fmt.Printf("Attempting to start command: %s \n", i.ApplicationCommandData().Name)
+		switch i.Type {
+		case discordgo.InteractionApplicationCommand:
+			if h, ok := commands.CommandHandlers[i.ApplicationCommandData().Name]; ok {
+				h(s, i)
+			}
+		case discordgo.InteractionMessageComponent:
+
+			if h, ok := commands.CommandHandlers[i.MessageComponentData().CustomID]; ok {
+				h(s, i)
+			}
+		}
+	})
+	fmt.Println("Done with registering handlers.")
 
 	// Register the messageCreate func as a callback for MessageCreate events.
 	//dg.AddHandler(messageCreate)

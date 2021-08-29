@@ -2,6 +2,8 @@ package commands
 
 import (
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -98,8 +100,8 @@ var (
 	CommandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		CmdPoll: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			msgformatted := formMessageContentPollID(i.ApplicationCommandData())
-
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			log.Print("Trying to create a new poll.")
+			err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: msgformatted,
@@ -111,6 +113,9 @@ var (
 					},
 				},
 			})
+			if err != nil {
+				log.Printf("Something went wrong %v", err.Error())
+			}
 		},
 		CmdPolList: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -126,19 +131,18 @@ var (
 			for _, c := range commandList {
 				msgFormat += fmt.Sprintf(cmdFormat, c)
 			}
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: msgFormat,
 				},
 			})
+			if err != nil {
+				log.Printf("Something went wrong %v", err.Error())
+			}
 		},
 		CmdClosePoll: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			margs := []interface{}{
-				// Here we need to convert raw interface{} value to wanted type.
-				// Also, as you can see, here is used utility functions to convert the value
-				// to particular type. Yeah, you can use just switch type,
-				// but this is much simpler
 				i.ApplicationCommandData().Options[0].StringValue(),
 			}
 			msgformat :=
@@ -171,7 +175,7 @@ func formMessageContentPollID(data discordgo.ApplicationCommandInteractionData) 
 			if opt.Name == "question" {
 				msgformat += "Question:\n%s \n"
 				margs = append(margs, opt.StringValue())
-			} else if opt.Name == "multipleOptions" {
+			} else if opt.Name == "multiple-options" {
 				if opt.BoolValue() {
 					msgformat += "Allows multiple options\n"
 				} else {
@@ -194,7 +198,7 @@ func emojiNumbers(data discordgo.ApplicationCommandInteractionData) []discordgo.
 	messageComponent := []discordgo.MessageComponent{}
 	index := 0
 	for _, opt := range data.Options {
-		if opt.Name == "question" {
+		if strings.Contains(opt.Name, "answer") {
 			index++
 			messageComponent = append(messageComponent, discordgo.Button{
 				Label: opt.StringValue(),
@@ -202,6 +206,7 @@ func emojiNumbers(data discordgo.ApplicationCommandInteractionData) []discordgo.
 				Emoji: discordgo.ButtonEmoji{
 					Name: numMap[index],
 				},
+				CustomID: fmt.Sprintf("emoji-%d", index),
 			})
 		}
 	}
