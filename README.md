@@ -9,4 +9,10 @@ cd to directory
 
 $ go build
 $ ./discgo-poll --token <discord bot token>
+
+Running without building
+
+$ go run main.go --token <discord bot token>
 ```
+
+Interact with the bot with attached discord server!
