@@ -100,7 +100,6 @@ var (
 	CommandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		CmdPoll: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			msgformatted := formMessageContentPollID(i.ApplicationCommandData())
-			log.Print("Trying to create a new poll.")
 			err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
@@ -191,7 +190,10 @@ func formMessageContentPollID(data discordgo.ApplicationCommandInteractionData) 
 		msgformat += "PollID: <#%s>\n"
 	}
 
-	return fmt.Sprint(msgformat, margs)
+	return fmt.Sprintf(
+		msgformat,
+		margs...,
+	)
 }
 
 func emojiNumbers(data discordgo.ApplicationCommandInteractionData) []discordgo.MessageComponent {
